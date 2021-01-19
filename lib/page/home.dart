@@ -1,5 +1,13 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+
+/*
+ * 表字段模拟
+ *  haveGotUp: false,
+ *  haveGoneBed: false,
+ */
+
 
 class HomePage extends StatelessWidget {
   const HomePage({Key key}) : super(key: key);
@@ -12,7 +20,7 @@ class HomePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             new CircleContainer(),
-            new RecordContainer()
+            new RecordContainer(),
           ],
         )
       )
@@ -20,8 +28,23 @@ class HomePage extends StatelessWidget {
   }
 }
 
-class CircleContainer extends StatelessWidget {
-  const CircleContainer({Key key}) : super(key: key);
+class CircleContainer extends StatefulWidget {
+  CircleContainer({Key key}) : super(key: key);
+
+  @override
+  _CircleContainerState createState() => _CircleContainerState();
+}
+
+class _CircleContainerState extends State<CircleContainer> {
+  String statusStr;
+  int todayStatus; // 0 我要起床 1 起床成功
+  @override
+  void initState() { 
+    statusStr = '我要起床';
+    todayStatus = 0;
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     var boxDirection = new BoxDecoration(
@@ -46,9 +69,16 @@ class CircleContainer extends StatelessWidget {
         Radius.circular(120.0)
       )
     );
-
-    return Container(
-      child: new Container(
+    return new InkWell(
+      borderRadius: BorderRadius.all(Radius.circular(120.0)),
+      onTap: () {
+        if (todayStatus == 1) return;
+        setState(() {
+          todayStatus = 1;
+          statusStr = '起床成功';
+        });
+      }, 
+      child: Container(
         padding: EdgeInsets.only(top: 20.0),
         width: 240,
         height: 240,
@@ -57,20 +87,58 @@ class CircleContainer extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             new Text(
-              '早 起',
+              statusStr,
               style: TextStyle(
                 fontSize: 40.0,
                 color: Color(0xfff7fcff),
               ),
             ),
-            new Text(
-              '19:12:11',
-              style: TextStyle(
-                fontSize: 20.0,
-                color: Color(0xff9ed7ff)
-              )
-            )
+            new CurrentTime()
           ],
+        )
+      )
+    );
+  }
+}
+
+class CurrentTime extends StatefulWidget {
+  CurrentTime({Key key}) : super(key: key);
+  @override
+  _CurrentTimeState createState() => _CurrentTimeState();
+}
+
+class _CurrentTimeState extends State<CurrentTime> {
+  String currentTime;
+  
+  @override
+  void initState() {
+    const timeout = const Duration(seconds: 1);
+    Timer.periodic(timeout, (timer) {
+      setState(() {
+        currentTime = getCurrentTime();
+      });
+    });
+    currentTime = getCurrentTime();
+    super.initState();
+  }
+
+  String getCurrentTime() {
+    var dateTime = DateTime.now();
+    var hour = dateTime.hour.toString();
+    var minute = dateTime.minute.toString();
+    var second = dateTime.second.toString();
+    var current = hour + ':' +  minute + ':' + second;
+    return current;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: new Text(
+        currentTime,
+        style: TextStyle(
+          fontSize: 20.0,
+          color: Color(0xff9ed7ff)
         )
       ),
     );
@@ -84,7 +152,7 @@ class RecordContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.only(top: 40.0),
-      child: new Text('今天是记录的第xx天，请继续保持'),
+      child: Text('您已经坚持xxx天啦，请继续加油'),
     );
   }
 }

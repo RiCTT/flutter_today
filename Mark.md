@@ -123,3 +123,11 @@
   - flutter_swiper —— 轮播库
   - flutter_screenutil —— 屏幕适配
   - url_launcher —— 打开网页，发送邮件，拨打电话的插件
+  - 数据持久化（ios、android）本地缓存
+    - [官方出品shared_preferences](https://pub.dev/packages/shared_preferences)
+    - local_cache_sync
+  - 图片/文件缓存
+
+## 踩坑记录
+
+  - 在函数中如果要停止执行，return后面要接分号；，不然后面的代码还是会执行到，，
