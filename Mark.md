@@ -125,9 +125,29 @@
   - url_launcher —— 打开网页，发送邮件，拨打电话的插件
   - 数据持久化（ios、android）本地缓存
     - [官方出品shared_preferences](https://pub.dev/packages/shared_preferences)
+
+      ```js
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      // 设置
+      await prefs.setString(key, value) // setBool, setDouble, setInt
+      prefs.setStringList(key, value);
+
+      // 获取
+      prefs.getString(key)
+      ```
+
     - local_cache_sync
   - 图片/文件缓存
 
 ## 踩坑记录
 
   - 在函数中如果要停止执行，return后面要接分号；，不然后面的代码还是会执行到，，
+  - 早/晚签到记录的结构设计（增/改，获取）
+
+    ```js
+    // 字段结构
+    let data = {
+      2019: [0, 1, 0, 1, 0, 1, 0]
+    }
+    update = data[day] = 1 // default = 0
+    ```

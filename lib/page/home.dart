@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 /*
  * 表字段模拟
- *  haveGotUp: false,
- *  haveGoneBed: false,
+ *  let data = {
+ *    2019: [0, 1, 0, 1, 0, 1, 0]
+ *  }
+ *  update = data[day] = 1 // default = 0
  */
 
 
@@ -69,9 +71,16 @@ class _CircleContainerState extends State<CircleContainer> {
         Radius.circular(120.0)
       )
     );
+    getStore() async {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      int counter = (prefs.getInt('counter') ?? 0) + 1;
+      print(counter);
+      await prefs.setInt('counter', counter);
+    }
     return new InkWell(
       borderRadius: BorderRadius.all(Radius.circular(120.0)),
       onTap: () {
+        getStore();
         if (todayStatus == 1) return;
         setState(() {
           todayStatus = 1;
@@ -126,7 +135,13 @@ class _CurrentTimeState extends State<CurrentTime> {
     var dateTime = DateTime.now();
     var hour = dateTime.hour.toString();
     var minute = dateTime.minute.toString();
+    if (minute.length == 1) {
+      minute = '0' + minute;
+    }
     var second = dateTime.second.toString();
+    if (second.length == 1) {
+      second = '0' + second;
+    }
     var current = hour + ':' +  minute + ':' + second;
     return current;
   }
