@@ -151,3 +151,8 @@
     }
     update = data[day] = 1 // default = 0
     ```
+
+## Leave
+  > 你没对我说 再见
+  > 所以我没有 走远 
+  

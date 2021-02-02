@@ -2,26 +2,81 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
 /*
  * 表字段模拟
+ *  // 早起的格式，早睡类似（统计需要组合计算）
  *  let data = {
- *    2019: [0, 1, 0, 1, 0, 1, 0]
+ *    2019: {
+ *      1: [1, 0, 0, 1, ....],
+ *      2: [0, 1, 0, 1, ....]
+ *    }
  *  }
+ *  0 = 这一天未打卡
+ *  1 = 打了起床卡
  *  update = data[day] = 1 // default = 0
  */
 
 
-class HomePage extends StatelessWidget {
-  const HomePage({Key key}) : super(key: key);
+class HomePage extends StatefulWidget {
+
+  HomePage({Key key}) : super(key: key);
+
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int upStatus;
+  int downStatus;
+
+  getTodayStatus() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var list = (prefs.getString('up_list'));
+    print('list === ');
+    print(list);
+    print(list);
+  }
+  
+  updateTodayList() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    var s = [{
+      1022: [1, 0, 2]
+    }];
+    var d = s.toString();
+    await prefs.setString('up_list', d);
+  }
+  
+  @override
+  void initState() {
+    getTodayStatus();
+    updateTodayList();
+    upStatus = 0;
+    downStatus = 0;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+     return Scaffold(
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            new CircleContainer(),
+            new CircleContainer(
+              upStatus: upStatus, 
+              downStatus: 0,
+              onChangeUp: () {
+                setState(() {
+                  upStatus = 1;
+                });
+              },
+              onChangeDown: () {
+                setState(() {
+                  downStatus = 1;
+                });
+              }
+            ),
             new RecordContainer(),
           ],
         )
@@ -30,20 +85,59 @@ class HomePage extends StatelessWidget {
   }
 }
 
+
 class CircleContainer extends StatefulWidget {
-  CircleContainer({Key key}) : super(key: key);
+  final upStatus; // 起床的状态
+  final downStatus; // 睡觉的状态
+  final Function onChangeUp;
+  final Function onChangeDown;
+
+  CircleContainer({
+    Key key, 
+    this.upStatus, 
+    this.downStatus,
+    this.onChangeUp,
+    this.onChangeDown
+  }) : super(key: key);
 
   @override
   _CircleContainerState createState() => _CircleContainerState();
 }
 
+List<Color> upColor = [
+  Color(0xFF5abcff),
+  Color(0xFF379afb)
+];
+
+List<Color> downColor = [
+  Color(0xff40495e),
+  Color(0xFF30394e)
+];
+
 class _CircleContainerState extends State<CircleContainer> {
-  String statusStr;
-  int todayStatus; // 0 我要起床 1 起床成功
+  String upStatusStr;
+  String downStatusStr;
+  List<Color> gradientColors;
+  bool lock;
+  
   @override
-  void initState() { 
-    statusStr = '我要起床';
-    todayStatus = 0;
+  void initState() {
+    if (widget.upStatus == 0) {
+      upStatusStr = '我要起床';
+      gradientColors = upColor;
+    } else {
+      upStatusStr = '早起成功';
+      gradientColors = upColor;
+    }
+    
+    if (widget.downStatus == 0 && widget.upStatus == 1) {
+      upStatusStr = '要睡觉啦~';
+      gradientColors = downColor;
+    }
+    if(widget.downStatus == 1 && widget.upStatus == 1) {
+      upStatusStr = '早睡成功';
+      gradientColors = downColor;
+    }
     super.initState();
   }
 
@@ -59,10 +153,7 @@ class _CircleContainerState extends State<CircleContainer> {
         ),
       ],
       gradient: LinearGradient(
-        colors: [
-          Color(0xFF5abcff),
-          Color(0xFF379afb)
-        ],
+        colors: gradientColors,
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
       ),
@@ -71,21 +162,32 @@ class _CircleContainerState extends State<CircleContainer> {
         Radius.circular(120.0)
       )
     );
-    getStore() async {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      int counter = (prefs.getInt('counter') ?? 0) + 1;
-      print(counter);
-      await prefs.setInt('counter', counter);
-    }
+    
     return new InkWell(
       borderRadius: BorderRadius.all(Radius.circular(120.0)),
       onTap: () {
-        getStore();
-        if (todayStatus == 1) return;
-        setState(() {
-          todayStatus = 1;
-          statusStr = '起床成功';
-        });
+        if (widget.upStatus == 1 && widget.downStatus == 1) return;
+        if (widget.upStatus == 0) {
+          widget.onChangeUp();
+          upStatusStr = '早起成功';
+          setState(() {
+            lock = true;
+          });
+          new Future.delayed(
+            new Duration(seconds: 3),
+            () {
+              setState(() {
+                upStatusStr = '等待睡觉～';
+                gradientColors = downColor;
+                lock = false;
+              });
+            }
+          );
+        }
+        if (widget.downStatus == 0 && widget.upStatus == 1 && !lock) {
+          widget.onChangeDown();
+          upStatusStr = '早睡成功';
+        }
       }, 
       child: Container(
         padding: EdgeInsets.only(top: 20.0),
@@ -96,7 +198,7 @@ class _CircleContainerState extends State<CircleContainer> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             new Text(
-              statusStr,
+              upStatusStr,
               style: TextStyle(
                 fontSize: 40.0,
                 color: Color(0xfff7fcff),
